@@ -1,0 +1,22 @@
+
+{
+  "short_name": "حلولكم",
+  "name": "منصة حلولكم | لوحة التحكم",
+  "description": "لوحة تحكم لإدارة المشاريع، المتخصصين، المستخدمين، والعمليات المالية في منصة حلولكم.",
+  "icons": [
+    {
+      "src": "/logo192.png",
+      "type": "image/png",
+      "sizes": "192x192"
+    },
+    {
+      "src": "/logo512.png",
+      "type": "image/png",
+      "sizes": "512x512"
+    }
+  ],
+  "start_url": "/",
+  "display": "standalone",
+  "theme_color": "#F8C421",
+  "background_color": "#111827"
+}

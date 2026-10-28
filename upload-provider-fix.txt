@@ -1,0 +1,11 @@
+# PROVIDER FIX - FILES TO UPLOAD
+# (9 files)
+app/Application/Educator/Enums/AcademicDegreeEnum.php
+app/Application/Admin/Livewire/Educator/Profile/Tabs/Academic.php
+app/Application/Admin/resources/views/pages/educators/show.blade.php
+app/Application/Admin/resources/views/livewire/educator/table/action.blade.php
+app/Application/Admin/lang/ar/home.php
+app/Application/Admin/lang/en/home.php
+lang/ar/lang.php
+lang/en/lang.php
+lang/ar/academic_degree.php
