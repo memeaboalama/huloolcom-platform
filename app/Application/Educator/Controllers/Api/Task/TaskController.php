@@ -3,23 +3,22 @@
 namespace App\Application\Educator\Controllers\Api\Task;
 
 use App\Actions\Project\Task\CreateSubTaskAction;
-use App\Actions\Project\Task\CreateTaskNoteAction;
+use App\Domain\Project\Actions\Task\CreateTaskNoteAction;
 use App\Actions\Project\Task\UpdateSubTaskAction;
 use App\Application\Project\Enums\AssignmentStatus;
 use App\Application\Project\Enums\TaskStatus;
+use App\Application\Project\Requests\Task\StoreTaskNoteRequest;
 use App\Application\Project\Requests\Task\UploadAttachmentRequest;
 use App\Domain\Educator\Resource\Task\TaskDetailResource;
 use App\Domain\Educator\Resource\Task\TaskFileResource;
 use App\Domain\Educator\Resource\Task\TaskResource;
 use App\Http\Controllers\Controller;
 
-use App\Http\Requests\Api\V1\Educator\Project\Task\StoreTaskNoteRequest;
-use App\Http\Requests\Api\V1\Educator\Project\Task\UpdateSubTaskRequest;
-
 use App\Support\Traits\Api\ApiResponseTraitV2;
 use Domain\Project\Actions\Task\StoreAttachmentAction;
 use Domain\Project\Models\SubTask;
 use Domain\Project\Models\Task;
+use Domain\Project\Resources\Task\TaskNoteResource;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
@@ -76,7 +75,7 @@ class TaskController extends Controller
             return $this->responseError([], 403, 'You are not authorized to view this task.');
 
         return $this->responseData([
-            'task' => TaskDetailResource::make($task->load(['project','subTasks', 'notes.creatable', 'attachments', 'assignments', 'activityLog']))]
+            'task' => TaskDetailResource::make($task->load(['project.attachments.uploader', 'subTasks', 'notes.creatable', 'attachments', 'assignments', 'activityLog']))]
             , 200, 'Task details retrieved successfully'
         );
     }
@@ -133,19 +132,19 @@ class TaskController extends Controller
         return $this->responseData([], 200, 'Deliverable deleted successfully');
     }
 
-    // public function storeTaskNote(StoreTaskNoteRequest $request, Task $task, CreateTaskNoteAction $createTaskNoteAction): JsonResponse
-    // {
-    //     $educatorId = auth()->id();
-    //     $isAssigned = $task->assignments()->where('assigned_to', $educatorId)->where('status', AssignmentStatus::ACCEPTED)->exists();
+    public function storeTaskNote(StoreTaskNoteRequest $request, Task $task, CreateTaskNoteAction $createTaskNoteAction): JsonResponse
+    {
+        $educatorId = auth()->id();
+        $isAssigned = $task->assignments()->where('assigned_to', $educatorId)->where('status', AssignmentStatus::ACCEPTED)->exists();
 
-    //     if (!$isAssigned) {
-    //         return $this->responseError([], 403, 'You are not authorized to add notes to this task.');
-    //     }
+        if (!$isAssigned) {
+            return $this->responseError([], 403, 'You are not authorized to add notes to this task.');
+        }
 
-    //     $note = $createTaskNoteAction->execute($task, $request->validated(), $educatorId);
+        $note = $createTaskNoteAction->execute($task, $request->validated(), $educatorId);
 
-    //     return $this->responseData([
-    //         'note' => TaskNoteResource::make($note)
-    //     ], 201, 'Note added successfully');
-    // }
+        return $this->responseData([
+            'note' => TaskNoteResource::make($note)
+        ], 201, 'Note added successfully');
+    }
 }

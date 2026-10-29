@@ -94,6 +94,7 @@ Route::group(['prefix' => 'v1/educator'],function () {
             Route::controller(TaskController::class)->group(function (){
                 Route::get('/', 'fetch');
                 Route::get('/{task}','show');
+                Route::post('/{task}/notes', 'storeTaskNote');
                 Route::post('/{task}/upload-attachment', 'uploadAttachment');
                 Route::post('/{task}/complete', 'complete');
                 Route::delete('/{task}/deliverables/{deliverableId}', 'destroyDeliverable');

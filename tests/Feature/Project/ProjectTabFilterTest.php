@@ -190,6 +190,7 @@ class ProjectTabFilterTest extends TestCase
                 ProjectTab::WITH_OFFERS->value => 6,
                 ProjectTab::WITHOUT_OFFERS->value => 4,
                 ProjectTab::PENDING_REVIEW->value => 3,
+                ProjectTab::PENDING->value => 7,
                 ProjectTab::IN_PROGRESS->value => 3,
                 ProjectTab::COMPLETED->value => 1,
                 ProjectTab::CANCELED->value => 1,
@@ -253,6 +254,14 @@ class ProjectTabFilterTest extends TestCase
             $this->assertProjectIds($withOffers, $this->projectIdsForTab(ProjectTab::WITH_OFFERS->value));
             $this->assertProjectIds($withoutOffers, $this->projectIdsForTab(ProjectTab::WITHOUT_OFFERS->value));
             $this->assertProjectIds($pendingReview, $this->projectIdsForTab(ProjectTab::PENDING_REVIEW->value));
+            $this->assertProjectIds([
+                $nonePending->id,
+                $rejected->id,
+                $pending->id,
+                $approved->id,
+                $assigned->id,
+                $assignmentOnly->id,
+            ], $this->projectIdsForTab(ProjectTab::PENDING->value));
             $this->assertProjectIds($inProgress, $this->projectIdsForTab(ProjectTab::IN_PROGRESS->value));
             $this->assertProjectIds([$completed->id], $this->projectIdsForTab(ProjectTab::COMPLETED->value));
             $this->assertProjectIds([$canceled->id], $this->projectIdsForTab(ProjectTab::CANCELED->value));
@@ -276,6 +285,7 @@ class ProjectTabFilterTest extends TestCase
             $response->assertJsonPath('data.counts.all', 1);
             $response->assertJsonPath('data.counts.without_offers', 1);
             $response->assertJsonPath('data.counts.with_offers', 0);
+            $response->assertJsonPath('data.counts.pending', 1);
         });
     }
 }

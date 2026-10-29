@@ -6,6 +6,7 @@ use App\Application\Project\Enums\AssignmentStatus;
 use App\Domain\Educator\Resource\AssignmentResource;
 use App\Domain\Educator\Resource\Task\SubTaskResource;
 use App\Domain\Educator\Resource\Task\TaskFileResource;
+use App\Domain\Project\Resources\Project\AttachmentResource;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 class TaskDetailResource extends JsonResource
@@ -79,6 +80,7 @@ class TaskDetailResource extends JsonResource
                 return [
                     'id' => $this->project->uuid,
                     'title' => $this->project->title,
+                    'attachments' => AttachmentResource::collection($this->project->attachments),
                 ];
             }),
         ];
