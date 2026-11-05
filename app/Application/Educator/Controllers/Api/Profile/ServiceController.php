@@ -3,11 +3,13 @@
 namespace App\Application\Educator\Controllers\Api\Profile;
 
 use App\Application\Educator\Requests\Profile\ServiceRequest;
+use App\Domain\AppBase\Resources\Edu\ServiceResource;
 use App\Domain\Educator\Resource\Profile\EducatorServiceResource;
 use App\Http\Controllers\Controller;
 use App\Support\Traits\Api\ApiResponseTraitV2;
+use App\Support\Enum\StatusEnum;
+use Domain\AppBase\Models\Edu\Service;
 use Domain\Educator\Actions\Profile\UpdateServiceAction;
-use Domain\Educator\Models\EducatorService;
 use Illuminate\Http\Request;
 
 class ServiceController extends Controller
@@ -19,6 +21,16 @@ class ServiceController extends Controller
         $educator = $request->user();
         $services = $educator->services()->with('approvedService')->get();
         return $this->responseData(['services' => EducatorServiceResource::collection($services)]);
+    }
+
+    public function options()
+    {
+        $services = Service::query()
+            ->where('status', StatusEnum::ACTIVE->value)
+            ->orderBy('id')
+            ->get();
+
+        return $this->responseData(['services' => ServiceResource::collection($services)]);
     }
 
     public function store(ServiceRequest $request, UpdateServiceAction $action)

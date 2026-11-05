@@ -2,6 +2,7 @@
 
 namespace Domain\Educator\Actions\Profile;
 
+use App\Domain\AppBase\Models\Setting\Language;
 use Domain\Educator\Models\Educator;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -12,7 +13,7 @@ class UpdateLanguagesAction
     {
         DB::beginTransaction();
         try {
-            $data['language_id'] = (int) $data['language_id'];
+            $data['language_id'] = Language::where('uuid', $data['language_id'])->firstOrFail()->id;
 
             if ($data['is_primary']) {
                 $educator->languages()->where('id', '!=', $editingId)->update(['is_primary' => false]);

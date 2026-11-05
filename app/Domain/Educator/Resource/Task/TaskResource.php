@@ -32,6 +32,7 @@ class TaskResource extends JsonResource
             'status' => $statusValue,
             'budget' => $this->budget !== null ? (float) $this->budget : null,
             'deadline' => $deadline,
+            'created_at' => $this->created_at?->toIso8601String(),
             'progress' => $progress,
             'subTasksCount' => $totalSubTasks,
             'completedSubTasksCount' => $completedSubTasks,

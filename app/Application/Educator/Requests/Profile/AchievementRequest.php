@@ -19,8 +19,8 @@ class AchievementRequest extends FormRequest
             'description' => ['required', 'string'],
             'organization' => ['required', 'string', 'max:255'],
             'issue_date' => ['nullable','required_if:type,certificate,course,workshop', 'date'],
-            'start_date' => ['nullable','required_if:type,work_experience|', 'date'],
-            'end_date' => ['nullable','required_with:start_date', 'date', 'after_or_equal:start_date'],
+            'start_date' => ['nullable', 'required_if:type,work_experience', 'date'],
+            'end_date' => ['nullable', 'date', 'after_or_equal:start_date'],
             'attachment' => ['sometimes', 'file', 'mimes:jpg,jpeg,png,gif,bmp,webp,pdf,doc,docx,zip'],
         ];
 

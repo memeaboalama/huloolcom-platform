@@ -6,9 +6,9 @@
         </div>
         <div class="space-y-3">
             @forelse ($currentRequests as $request)
-                <div class="bg-white border border-gray-200 rounded-lg p-4">
+                <div class="bg-white border border-gray-200 rounded-lg p-4 hover:border-primary/50 transition-colors">
                     <div class="flex justify-between items-start mb-2">
-                        <h5 class="font-medium text-gray-800">{{ $request['title'] }}</h5>
+                        <a href="{{ url('/educator/taskDetail') }}?id={{ $request['id'] }}" class="font-medium text-gray-800 hover:text-primary transition-colors">{{ $request['title'] }}</a>
                         @php
                             $statusKey = $request['status'] instanceof \BackedEnum ? $request['status']->value : $request['status'];
                             $statusClass = match($statusKey) {

@@ -171,6 +171,7 @@ Route::group(['prefix' => 'v1/educator'],function () {
                 Route::post('/basic-info','updateBasicInfo');
                 Route::put('/basic-info','updateBasicInfo');
                 Route::post('/biography','updateBiography');
+                Route::get('/academic-options', 'academicOptions');
             });
 
             Route::prefix('academic-majors')->controller(AcademicMajorController::class)->group(function () {
@@ -196,6 +197,7 @@ Route::group(['prefix' => 'v1/educator'],function () {
             });
 
             Route::prefix('services')->controller(ServiceController::class)->group(function () {
+                Route::get('/options','options');
                 Route::get('/','fetch');
                 Route::post('/','store');
                 Route::put('/{service}','update');
@@ -203,6 +205,7 @@ Route::group(['prefix' => 'v1/educator'],function () {
             });
 
             Route::prefix('skills')->controller(SkillController::class)->group(function () {
+                Route::get('/options','options');
                 Route::get('/','fetch');
                 Route::post('/','store');
                 Route::put('/{skill}','update');

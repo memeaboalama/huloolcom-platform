@@ -63,18 +63,6 @@ class TaskDetailResource extends JsonResource
             'notes' => $this->whenLoaded('notes', function () {
                 return \Domain\Project\Resources\Task\TaskNoteResource::collection($this->notes);
             }, []),
-            'activityLog' => $this->whenLoaded('activityLog', function () {
-                return $this->activityLog
-                    ->sortByDesc('timestamp')
-                    ->map(fn($log) => [
-                        'id' => (string) $log->uuid,
-                        'messageKey' => $log->message_key,
-                        'messagePayload' => $log->message_payload ?? [],
-                        'actorName' => $log->actor_name,
-                        'timestamp' => $log->timestamp?->format('Y-m-d H:i:s'),
-                    ])
-                    ->values();
-            }, []),
 
             'project' => $this->whenLoaded('project', function () {
                 return [

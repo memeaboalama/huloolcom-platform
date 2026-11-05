@@ -404,8 +404,8 @@ class EducatorProfileController extends Controller
 
     public function academicOptions(Request $request)
     {
-        $majors = BaseAcademicMajor::where('status','active')->get(['id','name']);
-        $data = $majors->map(fn($m) => ['id' => $m->id, 'name' => $m->name])->values();
+        $majors = BaseAcademicMajor::where('status','active')->get(['uuid','name']);
+        $data = $majors->map(fn($m) => ['id' => $m->uuid, 'name' => $m->name])->values();
         return $this->responseData(['approvedMajors' => $data]);
     }
 

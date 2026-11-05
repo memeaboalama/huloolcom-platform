@@ -50,7 +50,7 @@
                 </div>
 
                 <div class="flex flex-wrap gap-2 pt-4 border-t">
-                    <button class="btn-primary-sm">@lang('educator::home.requests.view_details')</button>
+                    <a href="{{ url('/educator/taskDetail') }}?id={{ $request['id'] }}" class="btn-primary-sm">@lang('educator::home.requests.view_details')</a>
                     <button class="btn-secondary-sm">@lang('educator::home.requests.update_status')</button>
                     <button class="btn-secondary-sm">@lang('educator::home.requests.contact_client')</button>
                 </div>

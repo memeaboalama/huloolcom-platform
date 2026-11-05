@@ -4,7 +4,6 @@ namespace Database\Seeders\AppBase;
 
 use App\Domain\AppBase\Models\Setting\Language;
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\DB;
 
 class LanguageSeeder extends Seeder
 {
@@ -13,23 +12,20 @@ class LanguageSeeder extends Seeder
      */
     public function run(): void
     {
-        DB::statement('SET FOREIGN_KEY_CHECKS=0;');
-        DB::table('languages')->truncate();
-        DB::statement('SET FOREIGN_KEY_CHECKS=1;');
-        Language::create([
+        Language::updateOrCreate(['code' => 'ar'], [
             'title' =>  [
                 'ar'    =>  'العربية',
                 'en'    =>  'Arabic',
             ],
-            'code'  =>  'ar',
+            'status' => 'active',
         ]);
 
-        Language::create([
+        Language::updateOrCreate(['code' => 'en'], [
             'title' =>  [
                 'ar'    =>  'الانجليزية',
                 'en'    =>  'English',
             ],
-            'code'  =>  'en',
+            'status' => 'active',
         ]);
     }
 }

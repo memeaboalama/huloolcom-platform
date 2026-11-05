@@ -7,6 +7,7 @@
                             @lang('admin::home.Branch Data')
                         </div>
                     </div>
+                    <div class="card-body">
 <div class="row gy-3 mt-2">
 <div class="col-xl-12">
                                                     <label for="branch-menu"
@@ -27,7 +28,7 @@
                                                     @error('branch_id') <span
                                                         class="d-inline-block text-danger">{{ $message }}</span> @enderror
 
-<div class="row col-xl-12">
+<div class="row">
                                             <div class="col-xl-4" hidden>
                                                 <label for="branch-country"
                                                        class="form-label text-black ">@lang('marketplace::home.Country') <span class="text-danger">*</span></label>
@@ -167,7 +168,7 @@
                 </div>
             </div>
 </div>
-
+                    </div>
 </div>
 <div class="col-xl-12">
                 <div class="card custom-card border-box-1">
@@ -176,8 +177,17 @@
                             @lang('admin::home.Branch Map')
                         </div>
                     </div>
-    <div class="box-body" >
-        <div id="map" style="height: 600px;"></div>
+    <div class="card-body">
+        <div class="mb-3">
+            <div class="input-group">
+                <input id="pac-input-create" type="text" class="form-control" placeholder="ابحث عن مدينة أو موقع على الخريطة (اضغط Enter للبحث)...">
+                <button class="btn btn-primary" type="button" id="btn-search-map" onclick="searchLocationOnMap()">
+                    <i class="ri-search-line me-1"></i> بحث
+                </button>
+            </div>
+            <div id="search-status-msg" class="text-muted fs-12 mt-1" style="display: none;"></div>
+        </div>
+        <div id="map" style="height: 600px; width: 100%; border-radius: 6px;"></div>
     </div>
 </div>
 </div>
@@ -420,11 +430,17 @@
 
 
         <script type="text/javascript">
-            let map, activeInfoWindow, markers = [];
+            let map, activeInfoWindow, markers = [], searchMarker = null;
+            let isBranchMapInitialized = false;
 
             /* ----------------------------- Initialize Map ----------------------------- */
             function initMap() {
-                map = new google.maps.Map(document.getElementById("map"), {
+                if (isBranchMapInitialized) return;
+                const mapEl = document.getElementById("map");
+                if (!mapEl) return;
+                isBranchMapInitialized = true;
+
+                map = new google.maps.Map(mapEl, {
                     center: {
                         lat: 24.774265,
                         lng: 46.738586,
@@ -438,6 +454,153 @@
                 });
 
                 initMarkers();
+                setupSearchBox();
+            }
+
+            /* --------------------------- Setup Search Box --------------------------- */
+            const instantLocations = {
+                'اليمن': { lat: 15.3694, lng: 44.1910, zoom: 7 },
+                'yemen': { lat: 15.3694, lng: 44.1910, zoom: 7 },
+                'صنعاء': { lat: 15.3694, lng: 44.1910, zoom: 12 },
+                'sanaa': { lat: 15.3694, lng: 44.1910, zoom: 12 },
+                'عدن': { lat: 12.7855, lng: 45.0187, zoom: 12 },
+                'aden': { lat: 12.7855, lng: 45.0187, zoom: 12 },
+                'تعز': { lat: 13.5789, lng: 44.0177, zoom: 12 },
+                'taiz': { lat: 13.5789, lng: 44.0177, zoom: 12 },
+                'الحديدة': { lat: 14.7978, lng: 42.9545, zoom: 12 },
+                'hodeidah': { lat: 14.7978, lng: 42.9545, zoom: 12 },
+                'حضرموت': { lat: 15.9348, lng: 48.7891, zoom: 8 },
+                'المكلا': { lat: 14.5425, lng: 49.1242, zoom: 12 },
+                'إب': { lat: 13.9759, lng: 44.1816, zoom: 12 },
+                'ibb': { lat: 13.9759, lng: 44.1816, zoom: 12 },
+                'ذمار': { lat: 14.5427, lng: 44.4051, zoom: 12 },
+                'السعودية': { lat: 23.8859, lng: 45.0792, zoom: 6 },
+                'saudi': { lat: 23.8859, lng: 45.0792, zoom: 6 },
+                'الرياض': { lat: 24.7136, lng: 46.6753, zoom: 12 },
+                'riyadh': { lat: 24.7136, lng: 46.6753, zoom: 12 },
+                'جدة': { lat: 21.5433, lng: 39.1728, zoom: 12 },
+                'jeddah': { lat: 21.5433, lng: 39.1728, zoom: 12 },
+                'مكة': { lat: 21.3891, lng: 39.8579, zoom: 12 },
+                'المدينة': { lat: 24.5247, lng: 39.5692, zoom: 12 },
+                'الدمام': { lat: 26.4207, lng: 50.0888, zoom: 12 },
+                'الخبر': { lat: 26.2172, lng: 50.1971, zoom: 12 },
+                'مصر': { lat: 26.8206, lng: 30.8025, zoom: 6 },
+                'القاهرة': { lat: 30.0444, lng: 31.2357, zoom: 12 },
+                'الإمارات': { lat: 23.4241, lng: 53.8478, zoom: 7 },
+                'دبي': { lat: 25.2048, lng: 55.2708, zoom: 12 },
+                'أبوظبي': { lat: 24.4539, lng: 54.3773, zoom: 12 }
+            };
+
+            function setupSearchBox() {
+                const input = document.getElementById('pac-input-create');
+                if (!input) return;
+
+                // Listen to Enter key
+                input.addEventListener('keydown', function(e) {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        searchLocationOnMap();
+                    }
+                });
+            }
+
+            /* ------------------- Fallback & Direct Search Function ------------------- */
+            function searchLocationOnMap() {
+                const input = document.getElementById('pac-input-create');
+                const rawQuery = input ? input.value.trim() : '';
+                if (!rawQuery) return;
+
+                const query = rawQuery.toLowerCase();
+                const statusEl = document.getElementById('search-status-msg');
+                if (statusEl) {
+                    statusEl.style.display = 'block';
+                    statusEl.textContent = 'جاري البحث عن: ' + rawQuery + '...';
+                }
+
+                // 1. Instant dictionary match (instant, works offline without waiting for network/QUIC)
+                if (instantLocations[query]) {
+                    const loc = instantLocations[query];
+                    moveToLocation(loc.lat, loc.lng, rawQuery, loc.zoom || 12);
+                    if (statusEl) {
+                        statusEl.textContent = 'تم تحديد: ' + rawQuery;
+                        setTimeout(() => { statusEl.style.display = 'none'; }, 3000);
+                    }
+                    return;
+                }
+
+                // Check for partial dictionary match
+                for (const key in instantLocations) {
+                    if (query.includes(key) || key.includes(query)) {
+                        const loc = instantLocations[key];
+                        moveToLocation(loc.lat, loc.lng, rawQuery, loc.zoom || 12);
+                        if (statusEl) {
+                            statusEl.textContent = 'تم تحديد: ' + rawQuery;
+                            setTimeout(() => { statusEl.style.display = 'none'; }, 3000);
+                        }
+                        return;
+                    }
+                }
+
+                // 2. Fallback to OpenStreetMap Nominatim with 5s timeout
+                fallbackNominatimSearch(rawQuery, statusEl);
+            }
+
+            function fallbackNominatimSearch(query, statusEl) {
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 6000);
+
+                fetch('https://nominatim.openstreetmap.org/search?format=json&limit=1&q=' + encodeURIComponent(query), {
+                    signal: controller.signal
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        clearTimeout(timeoutId);
+                        if (data && data.length > 0) {
+                            const lat = parseFloat(data[0].lat);
+                            const lng = parseFloat(data[0].lon);
+                            moveToLocation(lat, lng, data[0].display_name, 13);
+                            if (statusEl) {
+                                statusEl.textContent = 'تم العثور على: ' + data[0].display_name;
+                                setTimeout(() => { statusEl.style.display = 'none'; }, 4000);
+                            }
+                        } else {
+                            if (statusEl) statusEl.textContent = 'لم يتم العثور على نتائج للموقع المدخل.';
+                        }
+                    })
+                    .catch(err => {
+                        clearTimeout(timeoutId);
+                        console.error('Search error:', err);
+                        if (statusEl) {
+                            statusEl.textContent = 'تعذر الاتصال بخدمة البحث بسبب مشاكل في شبكة الإنترنت.';
+                        }
+                    });
+            }
+
+            function moveToLocation(lat, lng, label, zoomLevel) {
+                if (!map) return;
+                const pos = { lat: lat, lng: lng };
+                try {
+                    map.setCenter(pos);
+                    map.setZoom(zoomLevel || 13);
+
+                    if (searchMarker) {
+                        searchMarker.setMap(null);
+                    }
+
+                    searchMarker = new google.maps.Marker({
+                        position: pos,
+                        map: map,
+                        animation: google.maps.Animation.DROP,
+                        title: label || 'الموقع المختار'
+                    });
+
+                    const info = new google.maps.InfoWindow({
+                        content: '<b>' + (label || 'الموقع المختار') + '</b><br><small>' + lat.toFixed(5) + ', ' + lng.toFixed(5) + '</small>'
+                    });
+                    info.open(map, searchMarker);
+                } catch (e) {
+                    console.error('Move error:', e);
+                }
             }
             /* --------------------------- Initialize Markers --------------------------- */
             function initMarkers() {
@@ -513,7 +676,7 @@
             }
         </script>
         <!-- <script src="https://maps.googleapis.com/maps/api/js?key={{config('services.google_maps.api_key')}}&callback=initMap"></script> -->
-        <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCIJH6jbULC8MVaAX2LyxIQEBwWPjjeIF0&callback=initMap"></script>
+        <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCIJH6jbULC8MVaAX2LyxIQEBwWPjjeIF0&libraries=places&callback=initMap"></script>
     @endpush
 </div>
 

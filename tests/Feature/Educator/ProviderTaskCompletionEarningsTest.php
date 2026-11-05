@@ -17,6 +17,7 @@ use Domain\Project\Actions\Task\TaskChangeStatusAction;
 use Domain\Project\Models\Assignment;
 use Domain\Project\Models\Project;
 use Domain\Project\Models\Task;
+use Domain\Project\Models\TaskActivityLog;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Tests\TestCase;
@@ -166,6 +167,22 @@ class ProviderTaskCompletionEarningsTest extends TestCase
         });
     }
 
+    public function test_task_list_includes_creation_date_for_recent_task_filter(): void
+    {
+        $this->inTransaction(function () {
+            $admin    = $this->makeAdmin();
+            $educator = $this->makeEducator();
+            $task     = $this->makeTask($this->makeProject(), $admin, ProjectStatus::IN_PROGRESS->value);
+            $this->makeAssignment($task, $educator, $admin, 1500);
+
+            $response = $this->actingAs($educator, 'educator-api')->getJson(self::TASKS_URI);
+
+            $response->assertOk();
+            $response->assertJsonPath('data.tasks.0.id', $task->uuid);
+            $this->assertNotEmpty($response->json('data.tasks.0.created_at'));
+        });
+    }
+
     public function test_total_earnings_never_counts_the_same_amount_twice(): void
     {
         $this->inTransaction(function () {
@@ -248,6 +265,48 @@ class ProviderTaskCompletionEarningsTest extends TestCase
                 $task->fresh()->completed_at->format('Y-m-d H:i:s'),
                 'the original completion date must survive a repeated completion'
             );
+        });
+    }
+
+    public function test_pending_task_cannot_be_completed_before_work_starts(): void
+    {
+        $this->inTransaction(function () {
+            $admin    = $this->makeAdmin();
+            $educator = $this->makeEducator();
+            $project  = $this->makeProject();
+            $task     = $this->makeTask($project, $admin, ProjectStatus::PENDING->value);
+            $this->makeAssignment($task, $educator, $admin, 1500);
+
+            $this->actingAs($educator, 'educator-api')
+                ->postJson(self::TASKS_URI . '/' . $task->uuid . '/complete')
+                ->assertStatus(409);
+
+            $task->refresh();
+            $this->assertSame(ProjectStatus::PENDING, $task->status);
+            $this->assertNull($task->completed_at);
+        });
+    }
+
+    public function test_educator_task_details_do_not_include_activity_logs(): void
+    {
+        $this->inTransaction(function () {
+            $admin    = $this->makeAdmin();
+            $educator = $this->makeEducator();
+            $project  = $this->makeProject();
+            $task     = $this->makeTask($project, $admin, ProjectStatus::PENDING->value);
+            $this->makeAssignment($task, $educator, $admin, 1500);
+            TaskActivityLog::create([
+                'task_id' => $task->id,
+                'message_key' => 'task.assigned',
+                'message_payload' => [],
+                'actor_name' => 'Admin',
+                'timestamp' => now(),
+            ]);
+
+            $this->actingAs($educator, 'educator-api')
+                ->getJson(self::TASKS_URI . '/' . $task->uuid)
+                ->assertOk()
+                ->assertJsonMissingPath('data.task.activityLog');
         });
     }
 

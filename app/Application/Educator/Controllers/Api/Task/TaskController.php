@@ -6,6 +6,7 @@ use App\Actions\Project\Task\CreateSubTaskAction;
 use App\Domain\Project\Actions\Task\CreateTaskNoteAction;
 use App\Actions\Project\Task\UpdateSubTaskAction;
 use App\Application\Project\Enums\AssignmentStatus;
+use App\Application\Project\Enums\ProjectStatus;
 use App\Application\Project\Enums\TaskStatus;
 use App\Application\Project\Requests\Task\StoreTaskNoteRequest;
 use App\Application\Project\Requests\Task\UploadAttachmentRequest;
@@ -75,7 +76,7 @@ class TaskController extends Controller
             return $this->responseError([], 403, 'You are not authorized to view this task.');
 
         return $this->responseData([
-            'task' => TaskDetailResource::make($task->load(['project.attachments.uploader', 'subTasks', 'notes.creatable', 'attachments', 'assignments', 'activityLog']))]
+            'task' => TaskDetailResource::make($task->load(['project.attachments.uploader', 'subTasks', 'notes.creatable', 'attachments', 'assignments']))]
             , 200, 'Task details retrieved successfully'
         );
     }
@@ -84,6 +85,13 @@ class TaskController extends Controller
     {
         if (! $this->assertEducatorOwnsTask($request, $task)) {
             return $this->responseError([], 403, 'Unauthorized');
+        }
+
+        if (! in_array($task->status->value, [
+            ProjectStatus::IN_PROGRESS->value,
+            ProjectStatus::COMPLETED->value,
+        ], true)) {
+            return $this->responseError([], 409, 'Task can only be completed after work has started.');
         }
 
         // completed_at never reached MySQL before (missing column + not
