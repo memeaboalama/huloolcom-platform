@@ -116,7 +116,17 @@ class ProjectRepository extends EloquentMainRepository
                 $bidTasks->where('status', BidStatus::PENDING->value);
             }),
 
-            ProjectTab::PENDING->value => $query->where('status', ProjectStatus::PENDING->value),
+            ProjectTab::PENDING->value => $query
+                ->where('status', ProjectStatus::PENDING->value)
+                ->whereDoesntHave('bids.bidTasks', function ($bidTasks) {
+                    $bidTasks->where('status', BidStatus::ASSIGNED->value);
+                })
+                ->whereDoesntHave('tasks.assignments', function ($assignments) {
+                    $assignments->whereIn('status', [
+                        AssignmentStatus::ACCEPTED->value,
+                        AssignmentStatus::IN_PROGRESS->value,
+                    ]);
+                }),
 
             ProjectTab::IN_PROGRESS->value => $query->where(function ($projects) {
                 $projects->where('status', ProjectStatus::IN_PROGRESS->value)
